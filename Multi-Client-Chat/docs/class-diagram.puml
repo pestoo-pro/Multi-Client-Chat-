@@ -1,0 +1,154 @@
+@startuml
+title Multi-Client Chat - Production Class Architecture
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "TCPServer" {
+  class "ma.chat.server.TCPServer" as TCPServer {
+    +{static} main(args : String[]) : void
+  }
+  class "ma.chat.server.config.ServerConfig" as ServerConfig <<record>> {
+    -port : int
+    +{static} load() : ServerConfig
+  }
+  class "ma.chat.server.ui.ServerApplication" as ServerApplication <<JavaFX Application>> {
+    -{static} configuration : ServerConfig
+    ~usersList : ListView<String>
+    -userColors : Map<String, Color>
+    +{static} launchWithConfig(config : ServerConfig) : void
+    +start(stage : Stage) : void
+    ~updateUsers(usernames : List<String>) : void
+    +stop() : void
+  }
+  class "ma.chat.server.ui.ServerController" as ServerController {
+    +ServerController(port : int, view : ServerApplication)
+    +start() : void
+    +shutdown() : void
+  }
+  class "ma.chat.server.logic.ChatServer" as ChatServer {
+    -port : int
+    -clients : Set<ClientHandler>
+    -connections : Set<ClientHandler>
+    -running : boolean
+    +ChatServer(port : int)
+    +start() : void
+    +stop() : void
+    +registerClient(client : ClientHandler) : boolean
+    +removeClient(client : ClientHandler) : void
+    +getActiveUsernames() : List<String>
+    +broadcast(message : String) : void
+    +setLogListener(listener : Consumer<String>) : void
+    +setUsersChangedListener(listener : Runnable) : void
+    +setStatusChangedListener(listener : Runnable) : void
+  }
+  class "ma.chat.server.logic.ClientHandler" as ClientHandler {
+    -username : String
+    -readOnly : boolean
+    -output : PrintWriter
+    +ClientHandler(clientSocket : Socket, server : ChatServer)
+    +run() : void
+    +getUsername() : String
+    +sendMessage(message : String) : void
+    +closeConnection() : void
+  }
+}
+
+package "TCPClient" {
+  class "ma.chat.client.TCPClient" as TCPClient {
+    +{static} main(args : String[]) : void
+  }
+  class "ma.chat.client.config.ClientConfig" as ClientConfig <<record>> {
+    -host : String
+    -port : int
+    +{static} fromArguments(args : String[]) : ClientConfig
+    +{static} load() : ClientConfig
+  }
+  class "ma.chat.client.ui.ClientApplication" as ClientApplication <<JavaFX Application>> {
+    -{static} configuration : ClientConfig
+    ~messagesArea : TextArea
+    ~messageField : TextField
+    +{static} launchWithConfig(config : ClientConfig) : void
+    +start(stage : Stage) : void
+    ~showChat(identity : String) : void
+    +stop() : void
+  }
+  class "ma.chat.client.ui.ClientController" as ClientController {
+    -online : boolean
+    -busy : boolean
+    -readOnly : boolean
+    +ClientController(host : String, port : int, view : ClientApplication)
+    +connect() : void
+    +sendMessage() : void
+    +leave() : void
+    +shutdown() : void
+  }
+  class "ma.chat.client.logic.ChatClient" as ChatClient {
+    -host : String
+    -port : int
+    -receiver : Thread
+    -messageListener : Consumer<String>
+    +ChatClient(host : String, port : int)
+    +connect() : void
+    +sendUsername(username : String) : void
+    +sendMessage(message : String) : void
+    +setMessageListener(messageListener : Consumer<String>) : void
+    +startReceiving() : void
+    +awaitDisconnection() : void
+    +disconnect() : void
+  }
+}
+
+package "Selected JDK types" {
+  class "java.net.ServerSocket" as ServerSocket
+  class "java.net.Socket" as Socket
+  interface "java.lang.Runnable" as Runnable
+}
+
+TCPServer ..> ServerConfig : load()
+TCPServer ..> ServerApplication : launchWithConfig(config)
+ServerApplication --> ServerConfig : configuration
+ServerApplication "1" *--> "0..1" ServerController : creates controller in start()
+ServerController --> ServerApplication : view
+ServerController "1" *--> "1" ChatServer : creates server
+ChatServer "1" *--> "0..*" ClientHandler : creates / tracks connections
+ClientHandler --> ChatServer : server
+ChatServer --> "0..1" ServerSocket : serverSocket
+ClientHandler --> "1" Socket : clientSocket
+ClientHandler ..|> Runnable
+
+TCPClient ..> ClientConfig : fromArguments(args)
+TCPClient ..> ClientApplication : launchWithConfig(config)
+ClientApplication --> ClientConfig : configuration
+ClientApplication "1" *--> "0..1" ClientController : creates controller in start()
+ClientController --> ClientApplication : view
+ClientController "1" *--> "1" ChatClient : creates client
+ChatClient --> "0..1" Socket : socket
+
+note bottom of ChatServer
+  Both sets use ConcurrentHashMap.newKeySet().
+  connections: all accepted handlers, including pending handshakes.
+  clients: registered handlers, including read-only clients.
+  getActiveUsernames(): named users only.
+  start(): accept loop; one virtual thread per ClientHandler.
+end note
+note bottom of ServerController
+  Starts ChatServer on a virtual thread.
+  Log, user-list and status callbacks use Platform.runLater().
+end note
+note bottom of ClientController
+  Connection and sending work use virtual threads.
+  Message callback queues UI changes with Platform.runLater().
+end note
+note bottom of ChatClient
+  startReceiving() reads lines on a virtual thread.
+  Networking classes have no JavaFX dependencies.
+end note
+legend bottom
+  Solid arrows: stored references; filled diamonds: creation/lifecycle ownership.
+  Dashed arrows: dependencies; hollow triangle: interface implementation.
+  JavaFX Application inheritance is indicated by stereotypes to reduce clutter.
+  Selected fields/methods only; record accessors and framework internals omitted.
+endlegend
+@enduml

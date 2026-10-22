@@ -1,0 +1,71 @@
+@startuml
+title Multi-Client Chat - Runtime Deployment
+left to right direction
+skinparam componentStyle rectangle
+
+node "Server machine" as ServerMachine {
+  node "Java 21 Runtime" as ServerRuntime <<executionEnvironment>> {
+    artifact "TCPServer-1.0.jar" as ServerJar {
+      file "/config/application.properties\nserver.port=3000" as ServerProperties
+      file "/css/application.css" as ServerCss
+    }
+    component "JavaFX Server Dashboard\nServerApplication / ServerController" as Dashboard
+    component "ChatServer\naccept loop" as Server
+    component "ServerSocket\nListening port: server.port\nDefault: 3000" as Listener
+    component "ClientHandler instances\nOne virtual thread per connection\nEach owns an accepted Socket" as Handlers
+  }
+}
+
+node "Client machine 1" as Machine1 {
+  node "Java 21 Runtime" as Runtime1 <<executionEnvironment>> {
+    artifact "TCPClient-1.0.jar" as Jar1 {
+      file "/config/application.properties\nserver.host=localhost\nserver.port=3000" as Properties1
+      file "/css/application.css" as Css1
+    }
+    component "JavaFX Client\nClientApplication / ClientController" as UI1
+    component "ChatClient\nTCP Socket" as Socket1
+  }
+}
+
+node "Client machine 2" as Machine2 {
+  node "Java 21 Runtime" as Runtime2 <<executionEnvironment>> {
+    artifact "TCPClient-1.0.jar" as Jar2 {
+      file "/config/application.properties\nserver.host=localhost\nserver.port=3000" as Properties2
+      file "/css/application.css" as Css2
+    }
+    component "JavaFX Client\nClientApplication / ClientController" as UI2
+    component "ChatClient\nTCP Socket" as Socket2
+  }
+}
+
+ServerJar ..> Dashboard : launches
+Dashboard --> Server : starts / stops
+Server ..> ServerProperties : port resolved by ServerConfig
+Server --> Listener : listens
+Server --> Handlers : creates after accept()
+Jar1 ..> UI1 : launches
+UI1 --> Socket1 : connection / messages
+Jar2 ..> UI2 : launches
+UI2 --> Socket2 : connection / messages
+Socket1 --> Listener : TCP/IP connect\nconfigured server port (default 3000)
+Socket2 --> Listener : TCP/IP connect\nconfigured server port (default 3000)
+Socket1 <--> Handlers : TCP/IP text lines\naccepted connection
+Socket2 <--> Handlers : TCP/IP text lines\naccepted connection
+
+note bottom of Listener
+  ServerSocket accepts connections.
+  Chat traffic uses the resulting per-client Sockets.
+end note
+note bottom of Machine1
+  0..N clients; machines may also share one host for testing.
+  ClientConfig loads classpath properties when no arguments are given.
+  Two arguments (host, port) override the properties.
+  On a separate machine, supply the server's IP/hostname;
+  localhost refers to the client's own machine.
+end note
+note bottom of ServerMachine
+  JARs include JavaFX classes, CSS and properties.
+  Current packaged artifacts target Windows x64 with Java 21 x64.
+  The Java runtime is installed separately.
+end note
+@enduml

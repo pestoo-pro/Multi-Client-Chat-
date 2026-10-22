@@ -1,0 +1,69 @@
+@startuml
+title Normal Chat Message - Keyboard to Broadcast
+autonumber
+actor "User A" as UserA
+participant "ClientApplication A\nJavaFX view" as ViewA
+participant "ClientController A" as ControllerA
+participant "ChatClient A" as ClientA
+participant "ClientHandler A\nvirtual thread" as HandlerA
+participant "ChatServer" as Server
+participant "ClientHandler B" as HandlerB
+participant "ChatClient B\nreceiving virtual thread" as ClientB
+participant "ClientController B" as ControllerB
+participant "ClientApplication B\nJavaFX view" as ViewB
+actor "User B" as UserB
+
+note over ClientA,ClientB
+  Both clients are connected with named USERNAME: handshakes completed.
+  Handlers are registered; receiving loops and message listeners are active.
+  This diagram covers a normal, nonempty message only.
+end note
+
+UserA -> ViewA : Type message; press SEND or ENTER
+ViewA -> ControllerA : sendMessage()
+ControllerA -> ViewA : Read messageField.getText()
+ControllerA -> ControllerA : send(message, false)
+note right of ControllerA
+  Guards online/readOnly/busy/closed state.
+  Starts a virtual thread for the send operation.
+end note
+ControllerA -> ClientA : sendMessage(message)
+ClientA -> ClientA : output.println(message); checkError()
+ClientA ->> HandlerA : UTF-8 line over TCP
+HandlerA -> HandlerA : input.readLine() returns message
+HandlerA -> HandlerA : Format using LocalTime.now() and username
+note right of HandlerA
+  formatted = [HH:mm] username: message
+  Formatting occurs in ClientHandler on the server.
+end note
+HandlerA -> Server : broadcast(formatted)
+
+loop Each registered handler (A and B shown; order unspecified)
+  alt Recipient is A (sender also receives broadcast)
+    Server -> HandlerA : sendMessage(formatted)
+    HandlerA -> HandlerA : output.println(formatted); checkError()
+    HandlerA ->> ClientA : UTF-8 line over TCP
+    ClientA -> ControllerA : messageListener.accept(formatted)
+    ControllerA ->> ViewA : Platform.runLater(lambda): appendText(formatted + newline)
+    ViewA ->> UserA : Display message on JavaFX Application Thread
+  else Recipient is B
+    Server -> HandlerB : sendMessage(formatted)
+    note right of HandlerB
+      This sendMessage call executes on A's handler thread.
+      B's own handler thread independently reads B's input.
+    end note
+    HandlerB -> HandlerB : output.println(formatted); checkError()
+    HandlerB ->> ClientB : UTF-8 line over TCP
+    ClientB -> ClientB : reader.readLine() returns formatted line
+    ClientB -> ControllerB : messageListener.accept(formatted)
+    ControllerB ->> ViewB : Platform.runLater(lambda): appendText(formatted + newline)
+    ViewB ->> UserB : Display message on JavaFX Application Thread
+  end
+end
+
+note over ControllerA,ClientA
+  After a successful send, Controller A also queues
+  input clearing and control updates with Platform.runLater().
+  These UI updates may interleave with incoming broadcasts.
+end note
+@enduml

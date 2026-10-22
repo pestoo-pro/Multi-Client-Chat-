@@ -1,0 +1,21 @@
+# Java and Maven
+*.class
+target/
+*.log
+hs_err_pid*
+replay_pid*
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Local development screenshots (preserved locally)
+/img.png
+/TCPClient/src/main/java/ma/chat/client/img.png

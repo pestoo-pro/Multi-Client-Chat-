@@ -1,0 +1,42 @@
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-background-color: #f3f5f8;
+    -fx-accent: #2563eb;
+    -fx-focus-color: #2563eb;
+    -fx-faint-focus-color: #2563eb22;
+}
+.label { -fx-text-fill: #253247; }
+.screen-title { -fx-font-size: 24px; -fx-font-weight: bold; }
+.section-title { -fx-font-size: 13px; -fx-font-weight: bold; }
+.status-text { -fx-text-fill: #526174; -fx-font-weight: bold; }
+.text-area {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d8e0eb;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-text-fill: #253247;
+    -fx-padding: 4px;
+}
+.text-area .content { -fx-background-color: #ffffff; -fx-padding: 12px; }
+.text-area:focused { -fx-border-color: #2563eb; }
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: #c4cfdd; -fx-background-radius: 6px; }
+
+#server-port {
+    -fx-background-color: #e7edf5;
+    -fx-background-radius: 6px;
+    -fx-padding: 6px 10px;
+    -fx-text-fill: #526174;
+    -fx-font-weight: bold;
+}
+.list-view {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8px;
+    -fx-border-color: #d8e0eb;
+    -fx-border-radius: 8px;
+    -fx-padding: 6px;
+}
+/* Cell backgrounds are assigned by ServerApplication, not by CSS. */
+.list-cell { -fx-padding: 9px 10px; -fx-font-size: 13px; }
+.list-view .placeholder .label { -fx-text-fill: #738196; -fx-font-size: 12px; }

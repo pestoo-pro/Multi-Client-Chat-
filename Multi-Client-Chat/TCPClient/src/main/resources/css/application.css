@@ -1,0 +1,63 @@
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-background-color: #f3f5f8;
+    -fx-accent: #2563eb;
+    -fx-focus-color: #2563eb;
+    -fx-faint-focus-color: #2563eb22;
+}
+.label { -fx-text-fill: #253247; }
+.screen-title { -fx-font-size: 24px; -fx-font-weight: bold; }
+.section-title { -fx-font-size: 13px; -fx-font-weight: bold; }
+.status-text { -fx-text-fill: #526174; -fx-font-weight: bold; }
+.text-area {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d8e0eb;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-text-fill: #253247;
+    -fx-padding: 4px;
+}
+.text-area .content { -fx-background-color: #ffffff; -fx-padding: 12px; }
+.text-area:focused { -fx-border-color: #2563eb; }
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: #c4cfdd; -fx-background-radius: 6px; }
+
+#identity-screen { -fx-background-color: #ffffff; }
+.helper-text { -fx-text-fill: #64748b; -fx-font-size: 12px; }
+.input-field {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 10px 12px;
+    -fx-text-fill: #253247;
+    -fx-prompt-text-fill: #738196;
+}
+.input-field:focused { -fx-border-color: #2563eb; }
+.button {
+    -fx-padding: 10px 18px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.primary-button { -fx-background-color: #2563eb; -fx-text-fill: white; }
+.primary-button:hover { -fx-background-color: #1d4ed8; }
+.primary-button:pressed { -fx-background-color: #1e40af; }
+.danger-button {
+    -fx-background-color: #fff1f2;
+    -fx-border-color: #e7b4bc;
+    -fx-text-fill: #a1283b;
+}
+.danger-button:hover { -fx-background-color: #ffe4e6; }
+.button:focused { -fx-border-color: #172554; }
+.button:disabled, .input-field:disabled { -fx-opacity: 0.48; -fx-cursor: default; }
+.read-only-notice {
+    -fx-background-color: #eaf2ff;
+    -fx-background-radius: 6px;
+    -fx-padding: 10px 12px;
+    -fx-text-fill: #345583;
+}
+.error-text { -fx-text-fill: #b42339; -fx-font-weight: bold; }
+#identity-label { -fx-font-size: 20px; -fx-font-weight: bold; }
